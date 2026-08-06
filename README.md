@@ -277,7 +277,7 @@ go test ./...
 
 ## Автор
 
-Go Backend Developer Portfolio Project
+Али Абдулкаримов
 
 GitHub:
 
