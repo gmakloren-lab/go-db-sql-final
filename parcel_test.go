@@ -31,9 +31,13 @@ func getTestParcel() Parcel {
 
 // TestAddGetDelete проверяет добавление, получение и удаление посылки
 func TestAddGetDelete(t *testing.T) {
-
 	db, err := sql.Open("sqlite", "tracker.db")
 	require.NoError(t, err)
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Fatalf("failed to close db: %v", err)
+		}
+	}()
 
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
@@ -45,9 +49,9 @@ func TestAddGetDelete(t *testing.T) {
 	stored, err := store.Get(id)
 	require.NoError(t, err)
 
-	require.Equal(t, parcel.Client, stored.Client)
-	require.Equal(t, parcel.Status, stored.Status)
-	require.Equal(t, parcel.Address, stored.Address)
+	// присваиваем Number перед сравнением
+	parcel.Number = stored.Number
+	require.Equal(t, parcel, stored)
 
 	err = store.Delete(id)
 	require.NoError(t, err)
@@ -58,10 +62,13 @@ func TestAddGetDelete(t *testing.T) {
 
 // TestSetAddress проверяет обновление адреса
 func TestSetAddress(t *testing.T) {
-	// prepare
-	//db, err := // настройте подключение к БД
 	db, err := sql.Open("sqlite", "tracker.db")
 	require.NoError(t, err)
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Fatalf("failed to close db: %v", err)
+		}
+	}()
 
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
@@ -75,13 +82,21 @@ func TestSetAddress(t *testing.T) {
 
 	stored, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, newAddress, stored.Address)
+
+	parcel.Number = stored.Number
+	parcel.Address = newAddress
+	require.Equal(t, parcel, stored)
 }
 
 // TestSetStatus проверяет обновление статуса
 func TestSetStatus(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
 	require.NoError(t, err)
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Fatalf("failed to close db: %v", err)
+		}
+	}()
 
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
@@ -94,13 +109,21 @@ func TestSetStatus(t *testing.T) {
 
 	stored, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, ParcelStatusSent, stored.Status)
+
+	parcel.Number = stored.Number
+	parcel.Status = ParcelStatusSent
+	require.Equal(t, parcel, stored)
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
 func TestGetByClient(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
 	require.NoError(t, err)
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Fatalf("failed to close db: %v", err)
+		}
+	}()
 
 	store := NewParcelStore(db)
 
@@ -129,8 +152,8 @@ func TestGetByClient(t *testing.T) {
 	for _, p := range storedParcels {
 		expected, ok := parcelMap[p.Number]
 		require.True(t, ok)
-		require.Equal(t, expected.Client, p.Client)
-		require.Equal(t, expected.Status, p.Status)
-		require.Equal(t, expected.Address, p.Address)
+
+		// Number уже совпадает, можно сравнивать всю структуру
+		require.Equal(t, expected, p)
 	}
 }

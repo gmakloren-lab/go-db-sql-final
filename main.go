@@ -110,6 +110,13 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
+	defer func() {
+		if err := db.Close(); err != nil {
+			fmt.Println("close db error:", err)
+		}
+	}()
+
 	store := NewParcelStore(db) // создайте объект ParcelStore функцией NewParcelStore
 	service := NewParcelService(store)
 
